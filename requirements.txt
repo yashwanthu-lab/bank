@@ -1,0 +1,7 @@
+flask
+easyocr
+groq
+python-dotenv
+werkzeug
+mysql-connector-python
+gunicorn
