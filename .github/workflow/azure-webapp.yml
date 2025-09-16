@@ -1,0 +1,59 @@
+name: CI/CD - Flask Bank Automation to Azure
+
+on:
+  push:
+    branches:
+      - main   # Trigger on push to main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_WEBAPP_NAME: bank1          # Your Azure Web App name
+      PYTHON_VERSION: '3.13'
+
+    steps:
+      # 1️⃣ Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2️⃣ Azure login using service principal
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 3️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # 4️⃣ Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 5️⃣ Run tests (optional)
+      - name: Run tests
+        run: |
+          echo "Running tests..."
+          # Add your test command here, e.g.,
+          # pytest tests/
+
+      # 6️⃣ Zip app for deployment
+      - name: Archive app
+        run: zip -r release.zip . -x '*.git*'
+
+      # 7️⃣ Deploy to Azure Web App
+      - name: Deploy to Azure WebApp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: release.zip
+
+      # 8️⃣ Optional: Health check after deployment
+      - name: Check Web App Health
+        run: |
+          curl -I https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net
