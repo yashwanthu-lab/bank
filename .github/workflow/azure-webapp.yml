@@ -1,59 +1,55 @@
-name: CI/CD - Flask Bank Automation to Azure
+name: Flask Bank Automation CI/CD
 
 on:
   push:
     branches:
-      - main   # Trigger on push to main
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      AZURE_WEBAPP_NAME: bank1          # Your Azure Web App name
-      PYTHON_VERSION: '3.13'
 
     steps:
       # 1️⃣ Checkout repository
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Azure login using service principal
+      # 2️⃣ Azure Login with Service Principal JSON
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 3️⃣ Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # 3️⃣ Login to Azure Container Registry (ACR)
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          login-server: bankappacr.azurecr.io
+          username: ${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_SERVER_PASSWORD }}
 
-      # 4️⃣ Install dependencies
-      - name: Install dependencies
+      # 4️⃣ Build Docker image
+      - name: Build Docker image
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          docker build -t bankappacr.azurecr.io/flask_bank_app:latest .
 
-      # 5️⃣ Run tests (optional)
-      - name: Run tests
+      # 5️⃣ Push Docker image to ACR
+      - name: Push Docker image to ACR
         run: |
-          echo "Running tests..."
-          # Add your test command here, e.g.,
-          # pytest tests/
+          docker push bankappacr.azurecr.io/flask_bank_app:latest
 
-      # 6️⃣ Zip app for deployment
-      - name: Archive app
-        run: zip -r release.zip . -x '*.git*'
-
-      # 7️⃣ Deploy to Azure Web App
-      - name: Deploy to Azure WebApp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          package: release.zip
-
-      # 8️⃣ Optional: Health check after deployment
-      - name: Check Web App Health
+      # 6️⃣ Update Azure Web App to use the new image
+      - name: Update Azure Web App
         run: |
-          curl -I https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net
+          az webapp config container set \
+            --name bank1 \
+            --resource-group bank1-rg \
+            --container-image-name bankappacr.azurecr.io/flask_bank_app:latest \
+            --container-registry-url https://bankappacr.azurecr.io \
+            --container-registry-user ${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }} \
+            --container-registry-password ${{ secrets.DOCKER_REGISTRY_SERVER_PASSWORD }}
+
+      # 7️⃣ Restart Web App to apply changes
+      - name: Restart Azure Web App
+        run: |
+          az webapp restart --name bank1 --resource-group bank1-rg
