@@ -31,12 +31,12 @@ jobs:
       # 4️⃣ Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t bankappacr.azurecr.io/flask_bank_app:latest .
+          docker build -t bankappacr.azurecr.io/bank1-app:latest .
 
       # 5️⃣ Push Docker image to ACR
       - name: Push Docker image to ACR
         run: |
-          docker push bankappacr.azurecr.io/flask_bank_app:latest
+          docker push bankappacr.azurecr.io/bank1-app:latest
 
       # 6️⃣ Update Azure Web App to use the new image
       - name: Update Azure Web App
@@ -44,7 +44,7 @@ jobs:
           az webapp config container set \
             --name bank1 \
             --resource-group bank_doc-rg \
-            --container-image-name bankappacr.azurecr.io/flask_bank_app:latest \
+            --container-image-name bankappacr.azurecr.io/bank1-app:latest \
             --container-registry-url https://bankappacr.azurecr.io \
             --container-registry-user ${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }} \
             --container-registry-password ${{ secrets.DOCKER_REGISTRY_SERVER_PASSWORD }}
