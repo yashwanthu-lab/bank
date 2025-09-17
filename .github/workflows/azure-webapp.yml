@@ -52,4 +52,4 @@ jobs:
       # 7️⃣ Restart Web App to apply changes
       - name: Restart Azure Web App
         run: |
-          az webapp restart --name bank1 --resource-group bank_doc-rg
+          az webapp restart --name bank1 --resource-group bank_doc
