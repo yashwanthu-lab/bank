@@ -43,7 +43,7 @@ jobs:
         run: |
           az webapp config container set \
             --name bank1 \
-            --resource-group bank1-rg \
+            --resource-group bank_doc-rg \
             --container-image-name bankappacr.azurecr.io/flask_bank_app:latest \
             --container-registry-url https://bankappacr.azurecr.io \
             --container-registry-user ${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }} \
@@ -52,4 +52,4 @@ jobs:
       # 7️⃣ Restart Web App to apply changes
       - name: Restart Azure Web App
         run: |
-          az webapp restart --name bank1 --resource-group bank1-rg
+          az webapp restart --name bank1 --resource-group bank_doc-rg
