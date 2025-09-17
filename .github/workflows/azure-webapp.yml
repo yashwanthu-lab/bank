@@ -43,7 +43,7 @@ jobs:
         run: |
           az webapp config container set \
             --name bank1 \
-            --resource-group bank_doc-rg \
+            --resource-group bank_doc \
             --container-image-name bank1.azurecr.io/bank1-app:latest \
             --container-registry-url https://bank1.azurecr.io \
             --container-registry-user ${{ secrets.DOCKER_REGISTRY_SERVER_USERNAME }} \
